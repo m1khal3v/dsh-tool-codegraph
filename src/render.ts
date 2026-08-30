@@ -14,17 +14,6 @@ const SPILL_UNAVAILABLE = '(unavailable)'
 const NO_OUTPUT = '(no output)'
 
 /**
- * First CLI token of a full command line, used as the card's action label.
- * `String.split` yields an empty string (never undefined) as the first token
- * of an empty command, so the fallback is an explicit emptiness check rather
- * than a nullish coalesce.
- */
-const firstToken = (command: string): string => {
-  const token = command.split(' ')[0]
-  return token.length > 0 ? token : 'codegraph'
-}
-
-/**
  * Marker appended when the executor truncated a stream and can name the file
  * holding the complete output. `spillPath` is optional in the real
  * `CollectedOutput`: truncation can occur without a safe spill path, so the
@@ -92,6 +81,7 @@ export function extractModelText(result: ShellRunResult): string {
  * fields are intentionally dropped instead of spread into the result card.
  */
 const completedCard = (
+  action: string,
   command: string,
   workdir: string | undefined,
   output: string,
@@ -99,7 +89,7 @@ const completedCard = (
 ): TerminalResultView => {
   const card: TerminalResultView = {
     card: 'terminal',
-    title: buildCallCard(firstToken(command), command, workdir).title,
+    title: buildCallCard(action, command, workdir).title,
     output,
   }
   // The exit-status pill only makes sense when the process actually exited; a
@@ -113,25 +103,39 @@ const completedCard = (
  * carrying the model text in `output` (the real `ToolResultView` union has no
  * `text` field) plus the exit code when the process exited.
  * @param result - completed shell run.
+ * @param action - CLI subcommand (first argv token), rendered as
+ *   `codegraph <action>`. Passed explicitly: the action is not derivable from
+ *   `command`, whose first token is the executable.
  * @param command - full CLI command line of the invocation.
  * @param workdir - working directory the command ran in; the completed view
  *   cannot carry it, but the pending title is still derived through the call
  *   card built from it.
  * @returns the completed terminal card for the invocation.
  */
-export function renderResult(result: ShellRunResult, command: string, workdir: string | undefined): ToolResultView {
-  return completedCard(command, workdir, extractModelText(result), result.exitCode)
+export function renderResult(
+  result: ShellRunResult,
+  action: string,
+  command: string,
+  workdir: string | undefined,
+): ToolResultView {
+  return completedCard(action, command, workdir, extractModelText(result), result.exitCode)
 }
 
 /**
  * Tool result for a shell call that threw (timeout/abort/spawn failure): the
  * run produced no exit status, so the completed card carries only the error
  * text for the model.
+ * @param action - CLI subcommand (first argv token), rendered as `codegraph <action>`.
  * @param command - full CLI command line of the invocation.
  * @param workdir - working directory the command was meant to run in.
  * @param cause - short reason string, e.g. `call aborted` on an aborted signal.
  * @returns the completed terminal card with the `[Codegraph error: …]` text.
  */
-export function renderShellFailure(command: string, workdir: string | undefined, cause: string): ToolResultView {
-  return completedCard(command, workdir, `[Codegraph error: ${cause}]`, null)
+export function renderShellFailure(
+  action: string,
+  command: string,
+  workdir: string | undefined,
+  cause: string,
+): ToolResultView {
+  return completedCard(action, command, workdir, `[Codegraph error: ${cause}]`, null)
 }
