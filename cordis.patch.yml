@@ -1,0 +1,11 @@
+# @m1khal3v/dsh-tool-codegraph — bundle patch layer.
+#
+# Inserts one plugin row that mounts the CodeGraph tool set. Tools shell out to
+# the local `codegraph` CLI (https://github.com/colbymchenry/codegraph) through
+# ctx.shell; override the binary via the `executable` config key if it is not
+# on PATH.
+- insert:
+    - id: tool-codegraph
+      name: '@m1khal3v/dsh-tool-codegraph'
+      config:
+        executable: codegraph
