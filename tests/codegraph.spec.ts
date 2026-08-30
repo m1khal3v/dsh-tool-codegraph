@@ -129,7 +129,7 @@ describe('codegraph result rendering', () => {
       stderr: { text: 'zsh: command not found: codegraph', truncated: false },
     })
     const text = modelTextOf(renderResult(result, 'codegraph status', undefined))
-    expect(text).toContain('[Codegraph executable not found. Please install it or rely on bash/grep.]')
+    expect(text).toContain('[Codegraph executable not found. Please install it or rely on grep (or similar) instead.]')
   })
 
   it('appends the truncation marker on truncated stdout', () => {

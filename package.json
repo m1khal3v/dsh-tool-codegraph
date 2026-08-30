@@ -1,6 +1,6 @@
 {
   "name": "@m1khal3v/dsh-tool-codegraph",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CodeGraph integration for DeepSeek Harness",
   "license": "MIT",
   "author": "m1khal3v",

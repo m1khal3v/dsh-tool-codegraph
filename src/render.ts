@@ -77,7 +77,7 @@ export function extractModelText(result: ShellRunResult): string {
   const stderr = result.stderr.text
   let text = stderr
   if (detectBinaryNotFound(stderr, result.exitCode ?? 0)) {
-    text += '\n[Codegraph executable not found. Please install it or rely on bash/grep.]'
+    text += '\n[Codegraph executable not found. Please install it or rely on grep (or similar) instead.]'
   }
   if (detectIndexMissing(stderr)) {
     text += '\n[Codegraph error: Index missing. Run codegraph_init first.]'

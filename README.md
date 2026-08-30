@@ -46,7 +46,20 @@ codegraph status
 ```
 
 If the binary is missing, the tools reply with an install hint and the agent
-falls back to `bash`/`grep`.
+falls back to `grep`-based search.
+
+### 3. Initialize the index — your call
+
+There is deliberately **no init tool** in the set above: following the codegraph
+project's own recommendation, indexing should be kicked off by the user, not by
+an agent. When `codegraph status` reports a missing index, run it yourself:
+
+```sh
+codegraph init
+```
+
+Until you do, the tools report the missing index and the agent keeps working
+with other search tools.
 
 ## 🧰 Tools
 

@@ -11,9 +11,9 @@
  *
  * A system-prompt section teaches the model the orientation-first workflow:
  * status first; a missing index is the user's decision (the model tells the
- * user to run `codegraph init` and keeps working with bash/grep meanwhile);
+ * user to run `codegraph init` and keeps working with other tools meanwhile);
  * sync when stale; then lookups; callers/callees/impact are accelerators, not
- * exhaustive proofs — exhaustive searches fall back to bash/grep.
+ * exhaustive proofs — exhaustive searches fall back to grep.
  *
  * Execution follows the canonical-value flow: `execute` returns the structured
  * `CodegraphResult` validated against `CODEGRAPH_OUTPUT_SCHEMA`, and the
@@ -80,11 +80,11 @@ export function canonicalPath(input: string): string {
 
 /** System-prompt section text, verbatim contract of the tool catalog workflow. */
 const CODEGRAPH_PROMPT = `CodeGraph Usage Rules:
-- Workflow: ALWAYS check \`codegraph_status\` once per session first. If the index is missing, do NOT build it yourself — indexing is the user's decision: tell the user to run \`codegraph init\`, and continue with bash/grep meanwhile. If stale, run \`codegraph_sync\`.
+- Workflow: ALWAYS check \`codegraph_status\` once per session first. If the index is missing, do NOT build it yourself — indexing is the user's decision: tell the user to run \`codegraph init\`, and continue with other tools meanwhile. If stale, run \`codegraph_sync\`.
 - Orientation: Use \`codegraph_explore\` for mapping architecture or "how X works". Use \`codegraph_callers\` / \`codegraph_callees\` / \`codegraph_node\` for targeted lookups.
 - Subagents: For deep exploration, spawn a subagent and explicitly instruct it to use \`codegraph_explore\` — its verbatim source blocks are heavy, so keep them out of the main session.
 - DO NOT trust callers/callees/impact for completeness! They silently drop unresolved method/generic/trait-dispatch edges.
-- For exhaustive searches (e.g., finding ALL callers before a rename or signature change), you MUST use \`bash\` with \`grep\` or \`rg\`. Codegraph is only an accelerator.
+- For 100% accuracy (e.g., finding ALL callers before a rename or signature change), use \`grep\` or similar. Codegraph is only an accelerator.
 - Overloaded names: Do not query overloaded names with bare callers/callees. Use \`codegraph_node\` on a specific symbol ID or use grep.`
 
 /** Canonical value every codegraph tool returns from `execute`. */
