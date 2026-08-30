@@ -7,9 +7,9 @@
 import { describe, expect, it } from 'vitest'
 import type { ShellRunResult } from '@deepseek-ai/dsh-shell'
 import { valueSchemaSpecToJsonSchema } from '@deepseek-ai/dsh-tools'
-import { CODEGRAPH_OUTPUT_SCHEMA, resolveTimeout } from '../src/index.ts'
+import { CODEGRAPH_OUTPUT_SCHEMA, buildCommand, resolveTimeout } from '../src/index.ts'
 import type { CodegraphResult, ResolvedConfig } from '../src/index.ts'
-import { renderResult } from '../src/render.ts'
+import { renderResult, renderShellFailure } from '../src/render.ts'
 import { codegraphToolSpecs, quoteArg } from '../src/tools.ts'
 import type { TimeoutKind } from '../src/tools.ts'
 
@@ -74,6 +74,18 @@ describe('codegraph tool catalog', () => {
     expect(quoteArg("it's")).toBe(`'it'\\''s'`)
   })
 
+  it('single-quote-escapes an executable path containing spaces', () => {
+    expect(buildCommand('/Applications/My Folder/codegraph', ['status']))
+      .toBe("'/Applications/My Folder/codegraph' status")
+    expect(buildCommand('codegraph', ['status']))
+      .toBe("'codegraph' status")
+  })
+
+  it('keeps shell metacharacters in the executable path inert', () => {
+    expect(buildCommand('/opt/my$dir bin/codegraph', ['query', "'x'"]))
+      .toBe("'/opt/my$dir bin/codegraph' query 'x'")
+  })
+
   it('builds impact argv with optional --depth', () => {
     expect(spec('codegraph_impact').buildArgs({ symbol: 'foo', depth: 2 }))
       .toEqual(['impact', "'foo'", '--depth', '2'])
@@ -117,7 +129,7 @@ describe('codegraph result rendering', () => {
       stdout: { text: '', truncated: false },
       stderr: { text: 'Error: project not initialized (.codegraph missing)', truncated: false },
     })
-    const text = modelTextOf(renderResult(result, 'codegraph callers renderResult', undefined))
+    const text = modelTextOf(renderResult(result, 'callers', 'codegraph callers renderResult', undefined))
     expect(text).toContain('not initialized')
     expect(text).toContain('[Codegraph error: Index missing. Run codegraph_init first.]')
   })
@@ -128,7 +140,7 @@ describe('codegraph result rendering', () => {
       stdout: { text: '', truncated: false },
       stderr: { text: 'zsh: command not found: codegraph', truncated: false },
     })
-    const text = modelTextOf(renderResult(result, 'codegraph status', undefined))
+    const text = modelTextOf(renderResult(result, 'status', 'codegraph status', undefined))
     expect(text).toContain('[Codegraph executable not found. Please install it or rely on grep (or similar) instead.]')
   })
 
@@ -138,7 +150,7 @@ describe('codegraph result rendering', () => {
       stdout: { text: 'partial output', truncated: true, spillPath: '/tmp/spill-1.txt' },
       stderr: { text: '', truncated: false },
     })
-    const text = modelTextOf(renderResult(result, 'codegraph query renderResult', undefined))
+    const text = modelTextOf(renderResult(result, 'query', 'codegraph query renderResult', undefined))
     expect(text).toContain('[output truncated; full output: /tmp/spill-1.txt]')
   })
 
@@ -148,7 +160,19 @@ describe('codegraph result rendering', () => {
       stdout: { text: 'ok', truncated: false },
       stderr: { text: '', truncated: false },
     })
-    expect(modelTextOf(renderResult(result, 'codegraph status', undefined))).toBe('ok')
+    expect(modelTextOf(renderResult(result, 'status', 'codegraph status', undefined))).toBe('ok')
+  })
+
+  it('labels the completed card with the action, never the executable', () => {
+    const result = shellResult({
+      exitCode: 0,
+      stdout: { text: 'ok', truncated: false },
+      stderr: { text: '', truncated: false },
+    })
+    const done = renderResult(result, 'status', "'codegraph' status", undefined) as { title?: string }
+    expect(done.title).toBe('codegraph status')
+    const failed = renderShellFailure('query', "'codegraph' query 'x'", undefined, 'boom') as { title?: string }
+    expect(failed.title).toBe('codegraph query')
   })
 })
 
