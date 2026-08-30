@@ -36,7 +36,7 @@
 ### 1. Install the plugin
 
 ```sh
-dsh plugin add @m1khal3v/dsh-tool-codegraph
+dsh plugin add --profile web @m1khal3v/dsh-tool-codegraph
 ```
 
 ### 2. Check the wrapped CLI
