@@ -33,7 +33,7 @@ import z from '@deepseek-ai/schemastery'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { ToolResult, ToolRunContext, ValueSchemaSpec } from '@deepseek-ai/dsh-tools'
 import { buildCallCard, extractModelText } from './render.ts'
-import { codegraphToolSpecs } from './tools.ts'
+import { codegraphToolSpecs, quoteArg } from './tools.ts'
 import type { TimeoutKind } from './tools.ts'
 
 /** Cordis plugin name. */
@@ -76,6 +76,16 @@ export function canonicalPath(input: string): string {
     ? join(home, input.slice(1).replace(/^\/+/, ''))
     : input
   return resolvePath(expanded)
+}
+
+/**
+ * Shell command line for one invocation. The executable is a config value and
+ * must be shell-escaped like every other dynamic fragment: single-quote escaping
+ * (not double quotes) handles spaces AND keeps `$`, backticks and `"` inert.
+ * The argv tokens arriving here are already quoteArg-ed by the tool specs.
+ */
+export function buildCommand(executable: string, argv: string[]): string {
+  return [quoteArg(executable), ...argv].join(' ')
 }
 
 /** System-prompt section text, verbatim contract of the tool catalog workflow. */
@@ -162,7 +172,7 @@ export function apply(ctx: Context, config: Config): void {
   const runCodegraph = async (argv: string[], exec: ToolRunContext, timeout: number): Promise<CodegraphResult> => {
     const sessionCwd = exec.agent?.session.header.cwd
     const workdir = sessionCwd === undefined ? undefined : canonicalPath(sessionCwd)
-    const cmd = [resolved.executable, ...argv].join(' ')
+    const cmd = buildCommand(resolved.executable, argv)
     // Same marker renderShellFailure emits in render.ts: whichever path fails,
     // the model always reads failures in one recognizable `[Codegraph error: …]`
     // shape instead of a raw exception leaking out of `execute`.
@@ -214,7 +224,7 @@ export function apply(ctx: Context, config: Config): void {
         // The presenter signature carries only the parsed args, so the session
         // cwd is unknowable here — the card omits `cwd` and the UI bridge falls
         // back to the session workspace.
-        return buildCallCard(argv[0] ?? '', [resolved.executable, ...argv].join(' '), undefined)
+        return buildCallCard(argv[0] ?? '', buildCommand(resolved.executable, argv), undefined)
       },
       presentResult: (_args, result) => {
         const exitCode = metaExitCode(result.meta)
