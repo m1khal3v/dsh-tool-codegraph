@@ -184,14 +184,16 @@ export function apply(ctx: Context, config: Config): void {
       content: `[Codegraph error: ${cause}]`,
     })
     try {
-      const result = await ctx.shell.run(ctx.shell.resolve({
+      const spec = ctx.shell.resolve({
         command: cmd,
         workdir,
         timeoutMs: timeout,
         signal: exec.signal,
-      }))
-      // `run` resolves (not rejects) timeout and abort kills; `aborted` singles
-      // out caller cancellation so the model sees why the output stopped.
+      })
+      const execution = await ctx.shell.execute(spec)
+      const result = await execution.result()
+      // `result()` resolves (not rejects) timeout and abort kills; `aborted`
+      // singles out caller cancellation so the model sees why the output stopped.
       if (result.aborted) return failure('call aborted')
       return {
         kind: 'codegraph',
@@ -201,8 +203,10 @@ export function apply(ctx: Context, config: Config): void {
         content: extractModelText(result),
       }
     } catch (error) {
-      // `ctx.shell.run` rejects only on infrastructure failures (spawn failure);
-      // even those must surface as model text, never as an unhandled rejection.
+      // `ctx.shell.execute` rejects on preparation failure or cancellation
+      // before the process is published, and `execution.result()` rejects only
+      // on infrastructure failure (a spawn that never produced a process).
+      // Even those must surface as model text, never as an unhandled rejection.
       return failure(error instanceof Error ? error.message : String(error))
     }
   }

@@ -2,7 +2,7 @@ import { defineConfig, type UserConfig } from 'tsdown'
 
 export default defineConfig([
   {
-    entry: ['src/index.ts', 'src/invariant.ts'],
+    entry: ['src/index.ts'],
     format: 'esm',
     outDir: 'lib',
     clean: true,

@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/@m1khal3v/dsh-tool-codegraph"><img alt="npm" src="https://img.shields.io/npm/v/@m1khal3v/dsh-tool-codegraph?style=flat-square&color=4b6fff"></a>
-  <img alt="DeepSeek Harness" src="https://img.shields.io/badge/deepseek--harness-v0.1.1--rc.1-263146?style=flat-square">
+  <img alt="DeepSeek Harness" src="https://img.shields.io/badge/deepseek--harness-v0.2.1--rc.5-263146?style=flat-square">
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-263146?style=flat-square"></a>
 </p>
 
@@ -27,6 +27,7 @@
 
 ## 🛠 Requirements
 
+- DeepSeek Harness `>=0.2.1-rc.5 <0.3.0`
 - Node `^22.19 || >=24`
 - The [`codegraph`](https://github.com/colbymchenry/codegraph) CLI available on `PATH` (override via the `executable` config key)
 
@@ -59,6 +60,14 @@ codegraph init
 
 Until you do, the tools report the missing index and the agent keeps working
 with other search tools.
+
+## 🖥 Desktop
+
+This plugin works in DSH Desktop as well as the CLI:
+
+- Install it through the app's **Plugins** page.
+- The `codegraph` CLI must be available on `PATH` of the desktop host process.
+- All ten tools work in desktop sessions; no separate client half is needed.
 
 ## 🧰 Tools
 
